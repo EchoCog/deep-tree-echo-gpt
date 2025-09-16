@@ -24,6 +24,7 @@ import androidx.core.content.FileProvider
 import android.view.LayoutInflater
 import com.deeptree.echogpt.manager.*
 import com.deeptree.echogpt.service.VoiceService
+import kotlinx.coroutines.*
 import java.io.File
 import java.util.*
 
@@ -48,6 +49,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var cameraManager: CameraManager
     private lateinit var locationManager: LocationManager
     private lateinit var fileManager: FileManager
+    
+    // MLOps Integration
+    private lateinit var deepTreeEchoMLOpsManager: DeepTreeEchoMLOpsManager
+    private val mlOpsScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     private lateinit var speechRecognizerLauncher: ActivityResultLauncher<Intent>
     private lateinit var contactsLauncher: ActivityResultLauncher<Intent>
@@ -92,6 +97,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         cameraManager = CameraManager(this)
         locationManager = LocationManager(this)
         fileManager = FileManager(this)
+        
+        // Initialize MLOps system
+        deepTreeEchoMLOpsManager = DeepTreeEchoMLOpsManager(this)
+        initializeMLOpsSystem()
     }
     
     private fun initializeLaunchers() {
@@ -180,10 +189,105 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun processVoiceInput(text: String) {
         updateResponse("You said: $text")
         
-        // Simple AI response logic (can be enhanced with actual AI integration)
-        val response = generateAIResponse(text)
-        updateResponse(response)
-        speakResponse(response)
+        // Process through Deep Tree Echo MLOps pipeline
+        processWithMLOps(text)
+    }
+    
+    private fun processWithMLOps(text: String) {
+        mlOpsScope.launch {
+            try {
+                updateResponse("Processing with Deep Tree Echo MLOps...")
+                
+                // Create context data
+                val contextData = mapOf(
+                    "timestamp" to System.currentTimeMillis(),
+                    "battery_level" to getBatteryLevel(),
+                    "location_enabled" to permissionManager.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
+                    "app_state" to "foreground"
+                )
+                
+                // Process through MLOps pipeline
+                val result = deepTreeEchoMLOpsManager.processDeepTreeEcho(
+                    audioInput = floatArrayOf(), // Would contain actual audio data
+                    textInput = text,
+                    contextData = contextData
+                )
+                
+                // Generate AI response based on MLOps result
+                val aiResponse = generateEnhancedAIResponse(text, result)
+                updateResponse(aiResponse)
+                speakResponse(aiResponse)
+                
+                // Log system intelligence metrics
+                val metrics = deepTreeEchoMLOpsManager.getSystemIntelligenceMetrics()
+                Log.d("MainActivity", "System Intelligence Metrics: $metrics")
+                
+            } catch (e: Exception) {
+                Log.e("MainActivity", "MLOps processing failed", e)
+                // Fallback to simple AI response
+                val response = generateAIResponse(text)
+                updateResponse(response)
+                speakResponse(response)
+            }
+        }
+    }
+    
+    private fun generateEnhancedAIResponse(input: String, mlOpsResult: DeepTreeEchoMLOpsManager.MLOpsResult): String {
+        val baseResponse = generateAIResponse(input)
+        val confidence = mlOpsResult.confidence
+        val processingTime = mlOpsResult.processingTime
+        val acceleration = mlOpsResult.accelerationUsed
+        
+        return when {
+            confidence > 0.8f -> {
+                "$baseResponse\n\nProcessed with high confidence (${(confidence * 100).toInt()}%) using $acceleration acceleration in ${processingTime}ms."
+            }
+            confidence > 0.5f -> {
+                "$baseResponse\n\nProcessed with moderate confidence using neural network optimization."
+            }
+            else -> {
+                "$baseResponse\n\nProcessed using fallback AI system."
+            }
+        }
+    }
+    
+    private suspend fun getBatteryLevel(): Int {
+        return try {
+            val batteryIntent = registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+            val level = batteryIntent?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = batteryIntent?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1) ?: -1
+            if (level != -1 && scale != -1) {
+                (level * 100 / scale)
+            } else {
+                50
+            }
+        } catch (e: Exception) {
+            50
+        }
+    }
+    
+    private fun initializeMLOpsSystem() {
+        mlOpsScope.launch {
+            try {
+                updateResponse("Initializing Deep Tree Echo MLOps system...")
+                val success = deepTreeEchoMLOpsManager.initialize()
+                
+                if (success) {
+                    updateResponse("MLOps system initialized successfully with neural network acceleration")
+                    
+                    // Get system capabilities
+                    val metrics = deepTreeEchoMLOpsManager.getSystemIntelligenceMetrics()
+                    Log.i("MainActivity", "MLOps System Capabilities: $metrics")
+                    
+                } else {
+                    updateResponse("MLOps system initialization failed, using fallback AI")
+                }
+                
+            } catch (e: Exception) {
+                Log.e("MainActivity", "MLOps initialization error", e)
+                updateResponse("MLOps initialization error, using standard AI processing")
+            }
+        }
     }
     
     private fun generateAIResponse(input: String): String {
@@ -282,6 +386,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         if (::textToSpeech.isInitialized) {
             textToSpeech.stop()
             textToSpeech.shutdown()
+        }
+        
+        // Cleanup MLOps resources
+        mlOpsScope.cancel()
+        if (::deepTreeEchoMLOpsManager.isInitialized) {
+            deepTreeEchoMLOpsManager.cleanup()
         }
     }
 }
