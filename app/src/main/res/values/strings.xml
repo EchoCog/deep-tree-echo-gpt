@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EchoGPT</string>
+    <string name="voice_input_hint">Tap to speak</string>
+    <string name="listening">Listening...</string>
+    <string name="processing">Processing...</string>
+    <string name="error_permission_denied">Permission denied</string>
+    <string name="error_voice_not_available">Voice recognition not available</string>
+    <string name="contacts_access_required">Contacts access required</string>
+    <string name="calendar_access_required">Calendar access required</string>
+    <string name="camera_access_required">Camera access required</string>
+    <string name="location_access_required">Location access required</string>
+    <string name="microphone_access_required">Microphone access required</string>
+    <string name="widget_label">EchoGPT Quick Access</string>
+    <string name="widget_description">Quick access to EchoGPT AI</string>
+    <string name="alarm_set">Alarm set successfully</string>
+    <string name="reminder_set">Reminder set successfully</string>
+    <string name="image_captured">Image captured</string>
+    <string name="location_found">Location found</string>
+    <string name="notification_channel_name">EchoGPT Notifications</string>
+    <string name="notification_channel_description">Notifications from EchoGPT AI</string>
+</resources>
